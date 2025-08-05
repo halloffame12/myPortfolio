@@ -184,36 +184,53 @@
             });
             
             // Contact Form Submission
-            const contactForm = document.getElementById('contact-form');
-            
-            contactForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                // Simple form validation
-                const name = document.getElementById('name').value;
-                const email = document.getElementById('email').value;
-                const subject = document.getElementById('subject').value;
-                const message = document.getElementById('message').value;
-                
-                if (!name || !email || !subject || !message) {
-                    alert('Please fill in all fields');
-                    return;
-                }
-                
-                // Simulate form submission
-                const submitButton = contactForm.querySelector('button[type="submit"]');
-                submitButton.textContent = 'Sending...';
-                submitButton.disabled = true;
-                
-                setTimeout(() => {
-                    alert('Thank you for your message! I will get back to you soon.');
-                    contactForm.reset();
-                    submitButton.textContent = 'Send Message';
-                    submitButton.disabled = false;
-                }, 1500);
-            });
+            // Contact Form Submission with AJAX for Formspree
+const contactForm = document.getElementById('contact-form');
+const submitButton = contactForm.querySelector('button[type="submit"]');
+const originalButtonText = submitButton.innerHTML; // Store original button content
+
+async function handleFormSubmit(event) {
+    event.preventDefault(); // Keep this to prevent default redirect
+    const form = event.target;
+    const data = new FormData(form);
+
+    // Update button state to show submission is in progress
+    submitButton.innerHTML = 'Sending... <i class="ri-loader-4-line animate-spin ml-1"></i>';
+    submitButton.disabled = true;
+
+    try {
+        const response = await fetch(form.action, {
+            method: form.method,
+            body: data,
+            headers: {
+                'Accept': 'application/json'
+            }
         });
-        
+
+        if (response.ok) {
+            // Success!
+            submitButton.innerHTML = 'Message Sent! <i class="ri-check-line ml-1"></i>';
+            form.reset(); // Clear the form fields
+            setTimeout(() => {
+                submitButton.innerHTML = originalButtonText; // Reset button text
+                submitButton.disabled = false;
+            }, 3000); // Reset after 3 seconds
+        } else {
+            // Handle server errors (e.g., Formspree is down)
+            throw new Error('Network response was not ok.');
+        }
+    } catch (error) {
+        // Handle submission errors (e.g., no internet)
+        console.error('Submission error:', error);
+        submitButton.innerHTML = 'Error Sending <i class="ri-close-line ml-1"></i>';
+        setTimeout(() => {
+            submitButton.innerHTML = originalButtonText; // Reset button text
+            submitButton.disabled = false;
+        }, 3000); // Reset after 3 seconds
+    }
+}
+
+contactForm.addEventListener("submit", handleFormSubmit);        
         // Particles.js Configuration
         document.addEventListener('DOMContentLoaded', function() {
             particlesJS('particles-js', {
